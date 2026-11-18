@@ -1,0 +1,13 @@
+{
+  "name": "exopets-colombo-care",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check app.js && node --check admin.js && node --check seller/seller.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.119.0",
+    "@vercel/blob": "2.0.1"
+  }
+}

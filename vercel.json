@@ -1,0 +1,27 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ],
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/matcher", "destination": "/index.html" },
+    { "source": "/dna-testing", "destination": "/index.html" },
+    { "source": "/care-guides", "destination": "/index.html" },
+    { "source": "/shop", "destination": "/index.html" },
+    { "source": "/seller", "destination": "/seller/index.html" },
+    { "source": "/enquire", "destination": "/index.html" }
+  ]
+}

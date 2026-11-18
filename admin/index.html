@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#062c21">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/assets/exopets-mark.svg" type="image/svg+xml">
+  <title>EXOPETS COLOMBO — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body class="admin-body">
+  <main class="login-shell" data-login-shell>
+    <section class="login-card">
+      <div class="admin-brand admin-brand-on-light"><img class="admin-logo" src="/assets/exopets-logo-dark.svg" alt="EXOPETS COLOMBO"><small>CONTENT STUDIO</small></div>
+      <span class="eyebrow">SECURE ADMIN</span>
+      <h1>Welcome back.</h1>
+      <p>Manage the website, birds, products, guides and customer requests.</p>
+      <form data-login-form>
+        <label>Email<input name="email" type="email" autocomplete="username" required placeholder="admin@exopetscolombo.com"></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" required placeholder="••••••••••••"></label>
+        <button class="button button-gold full" type="submit">Sign in</button>
+        <p class="form-status" role="status"></p>
+      </form>
+      <a href="/">← View public website</a>
+    </section>
+  </main>
+
+  <div class="admin-app" data-admin-app hidden>
+    <aside class="admin-sidebar">
+      <a class="admin-brand" href="/" target="_blank"><img class="admin-logo" src="/assets/exopets-logo-light.svg" alt="EXOPETS COLOMBO"><small>CONTENT STUDIO</small></a>
+      <nav data-admin-nav>
+        <button class="active" data-tab="overview"><span>⌂</span> Overview</button>
+        <button data-tab="business"><span>✦</span> Site details</button>
+        <button data-tab="birds"><span>🦜</span> Birds</button>
+        <button data-tab="products"><span>▣</span> Products</button>
+        <button data-tab="guides"><span>▤</span> Care guides</button>
+        <button data-tab="matcher"><span>⌕</span> Bird matcher</button>
+        <button data-tab="requests"><span>✉</span> Requests <b data-new-count>0</b></button>
+      </nav>
+      <div class="sidebar-bottom"><a href="/" target="_blank">↗ Open website</a><button type="button" data-logout>Sign out</button></div>
+    </aside>
+    <section class="admin-main">
+      <header class="admin-topbar"><div><button class="admin-menu" type="button" data-admin-menu>☰</button><span class="eyebrow">EXOPETS COLOMBO</span><h1 data-admin-title>Overview</h1></div><div class="top-actions"><span class="save-state" data-save-state>All changes saved</span><button class="button button-gold" type="button" data-save>Save website</button></div></header>
+      <div class="admin-content">
+        <section class="admin-panel active" data-panel="overview"></section>
+        <section class="admin-panel" data-panel="business"></section>
+        <section class="admin-panel" data-panel="birds"></section>
+        <section class="admin-panel" data-panel="products"></section>
+        <section class="admin-panel" data-panel="guides"></section>
+        <section class="admin-panel" data-panel="matcher"></section>
+        <section class="admin-panel" data-panel="requests"></section>
+      </div>
+    </section>
+  </div>
+  <div class="toast" data-toast role="status"></div>
+  <script type="module" src="/admin.js"></script>
+</body>
+</html>
