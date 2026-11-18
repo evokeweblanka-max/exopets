@@ -16,8 +16,8 @@
 .product-sprite-2{background-image:url('/assets/product-supplement.webp')!important}
 
 .admin-brand{align-items:flex-start;flex-direction:column;gap:6px}
-.admin-logo{display:block;width:178px;height:auto}
-.admin-brand>small{padding-left:70px;font-size:.5rem;letter-spacing:.22em;color:#d4e0da}
+.admin-logo{display:block;width:108px;height:auto;object-fit:contain}
+.admin-brand>small{padding-left:0;font-size:.5rem;letter-spacing:.22em;color:#d4e0da}
 .admin-brand-on-light>small{color:#52635a}
 .login-card .admin-brand{margin-bottom:32px}
 .login-shell[hidden],.admin-app[hidden]{display:none!important}

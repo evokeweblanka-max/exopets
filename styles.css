@@ -36,8 +36,8 @@
 }
 
 /* Finished EXOPETS identity asset. */
-.brand-logo{display:block;width:clamp(190px,18vw,238px);height:auto;max-width:none;object-fit:contain;object-position:left center;flex:0 0 auto;filter:drop-shadow(0 4px 12px rgba(0,0,0,.14))}
-.footer-logo{display:block;width:min(260px,100%);height:auto;align-self:flex-start}
+.brand-logo{display:block;width:auto;height:72px;max-width:none;object-fit:contain;object-position:left center;flex:0 0 auto;filter:drop-shadow(0 4px 12px rgba(0,0,0,.18))}
+.footer-logo{display:block;width:148px;height:auto;align-self:flex-start}
 .footer-brand{align-items:flex-start;flex-direction:column}
 
 /* Care guide system — quick facts, daily care and related products. */
@@ -79,7 +79,7 @@
 
 @media(max-width:720px){
   .site-header{padding-left:14px;padding-right:10px}
-  .brand-logo{width:181px}
+  .brand-logo{width:auto;height:66px}
   .header-actions{gap:6px}
   .icon-button{padding:0 12px;min-width:74px;justify-content:center}
   .menu-toggle{width:40px;padding:8px}
@@ -118,7 +118,7 @@
 }
 
 @media(max-width:380px){
-  .brand-logo{width:168px}
+  .brand-logo{width:auto;height:61px}
   .icon-button{min-width:68px;padding:0 9px}
   .guide-cover-copy{max-width:66%}
   .guide-cover-copy h2{font-size:1.98rem;max-width:215px}
