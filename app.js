@@ -3,8 +3,6 @@ const state = {
   view: "home",
   matchStep: 0,
   answers: {},
-  cart: JSON.parse(localStorage.getItem("exopets-cart") || "[]"),
-  marketplaceProducts: [],
   category: "All",
   search: ""
 };
@@ -143,79 +141,31 @@ function renderGuides(selectedId) {
   ];
   const factPanel = selected.birdId === "all" ? "" : `<section class="quick-facts"><h3>Quick facts</h3><div class="fact-grid">${facts.map(([icon, label, value]) => `<div class="fact-item">${careIcon(icon)}<div><span>${label}</span><strong>${escapeHtml(value || "Ask our team")}</strong></div></div>`).join("")}</div></section>
     <div class="care-rows"><article>${careIcon("bowl")}<div><h3>Food</h3><p>${escapeHtml(bird.food)}</p></div><span>›</span></article><article>${careIcon("toy")}<div><h3>Enrichment</h3><p>${escapeHtml(bird.enrichment)}</p></div><span>›</span></article></div>`;
-  const relatedPanel = related.length ? `<section class="related-essentials"><h3>Related essentials</h3><div class="related-product-grid">${related.map(product => `<article><div class="related-product-image product-sprite-${Number(product.sprite) || 0}"${imageStyle(product, "product")}></div><small>${escapeHtml(product.category)} · Demo</small><h4>${escapeHtml(product.name)}</h4><strong>${money(product.price)}</strong><button type="button" data-add-product="${escapeHtml(product.id)}">🛒 Add</button></article>`).join("")}</div></section>` : "";
+  const relatedPanel = related.length ? `<section class="related-essentials"><h3>Related essentials</h3><div class="related-product-grid">${related.map(product => `<article><div class="related-product-image product-sprite-${Number(product.sprite) || 0}"${imageStyle(product, "product")}></div><small>${escapeHtml(product.category)}</small><h4>${escapeHtml(product.name)}</h4><strong>${money(product.price)}</strong><button type="button" data-enquire-product="${escapeHtml(product.id)}">Enquire</button></article>`).join("")}</div></section>` : "";
   $('[data-guide-detail]').innerHTML = `<div class="guide-cover"><div class="guide-cover-copy"><span class="eyebrow">CARE GUIDE</span><h2>${escapeHtml(selected.title)}</h2><p>${escapeHtml(selected.intro)}</p></div>${birdImage(bird, "guide-cover-bird")}</div><div class="guide-paper">${factPanel}${relatedPanel}<details class="guide-more"><summary>Complete care guidance</summary>${selected.sections.map(section => `<section class="guide-detail-section"><h3>${escapeHtml(section.title)}</h3><p>${escapeHtml(section.body)}</p></section>`).join("")}<p class="care-disclaimer">General guidance only. Diet changes, supplements and health concerns should be discussed with an avian veterinarian.</p></details><button type="button" class="button button-coral" data-enquire-bird="${escapeHtml(bird.name)}">Ask our team a question</button></div>`;
   $$('[data-guide-id]').forEach(button => button.addEventListener("click", () => renderGuides(button.dataset.guideId)));
-  $$('[data-guide-detail] [data-add-product]').forEach(button => button.addEventListener("click", () => addToCart(button.dataset.addProduct)));
 }
 
 function renderShop() {
-  const products = [...state.content.products.filter(product => product.active !== false), ...state.marketplaceProducts];
+  const products = state.content.products.filter(product => product.active !== false);
   const categories = ["All", ...new Set(products.map(product => product.category))];
   $('[data-category-chips]').innerHTML = categories.map(category => `<button type="button" class="${state.category === category ? "active" : ""}" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join("");
   const visible = products.filter(product => (state.category === "All" || product.category === state.category) && `${product.name} ${product.description} ${product.category}`.toLowerCase().includes(state.search.toLowerCase()));
-  $('[data-product-grid]').innerHTML = visible.length ? visible.map(product => `<article class="product-card ${product.marketplace ? "marketplace-card" : ""}"><div class="product-image product-sprite-${Number(product.sprite) || 0}"${imageStyle(product, "product")}></div><div class="product-card-content"><span class="category">${escapeHtml(product.category).toUpperCase()}${product.marketplace ? " · VERIFIED SELLER" : ""}</span><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.description)}</p><footer><span class="price">${money(product.price)}</span><button type="button" data-add-product="${escapeHtml(product.id)}">🛒 Add</button></footer></div></article>`).join("") : `<p>No products match your search.</p>`;
+  $('[data-product-grid]').innerHTML = visible.length ? visible.map(product => `<article class="product-card"><div class="product-image product-sprite-${Number(product.sprite) || 0}"${imageStyle(product, "product")}></div><div class="product-card-content"><span class="category">${escapeHtml(product.category).toUpperCase()}</span><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.description)}</p><footer><span class="price">${money(product.price)}</span><button type="button" data-enquire-product="${escapeHtml(product.id)}">WhatsApp enquiry</button></footer></div></article>`).join("") : `<p>No products match your search.</p>`;
   $$('[data-category]').forEach(button => button.addEventListener("click", () => { state.category = button.dataset.category; renderShop(); }));
-  $$('[data-add-product]').forEach(button => button.addEventListener("click", () => addToCart(button.dataset.addProduct)));
 }
 
-function addToCart(id) {
-  const existing = state.cart.find(item => item.id === id);
-  const product = [...state.content.products, ...state.marketplaceProducts].find(item => item.id === id);
+function enquireProduct(id) {
+  const product = state.content.products.find(item => item.id === id);
   if (!product) return;
-  if (existing) existing.quantity += 1; else state.cart.push({ id, name: product.name, price: Number(product.price), sprite: Number(product.sprite) || 0, quantity: 1 });
-  saveCart();
-  showToast(`${product.name} added to your cart`);
-}
-
-async function loadMarketplaceProducts() {
-  const cfg = globalThis.EXOPETS_MARKETPLACE;
-  if (!cfg || !globalThis.supabase) return;
-  try {
-    const marketplace = globalThis.supabase.createClient(cfg.url, cfg.publishableKey, { auth: { persistSession: false } });
-    const { data, error } = await marketplace.from("marketplace_products").select("id,name,category,description,price,stock,availability_note,marketplace_product_images(storage_path,sort_order)").order("created_at", { ascending: false });
-    if (error) throw error;
-    state.marketplaceProducts = (data || []).map(product => {
-      const image = [...(product.marketplace_product_images || [])].sort((a, b) => a.sort_order - b.sort_order)[0];
-      return { ...product, marketplace: true, active: true, sprite: -1, image: image ? `${cfg.url}/storage/v1/object/public/${cfg.bucket}/${image.storage_path}` : "" };
-    });
-  } catch (error) {
-    console.warn("Marketplace products could not be loaded", error);
-  }
-}
-
-function saveCart() {
-  localStorage.setItem("exopets-cart", JSON.stringify(state.cart));
-  renderCart();
-}
-
-function renderCart() {
-  const count = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-  $$('[data-cart-count]').forEach(el => el.textContent = count);
-  $('[data-cart-items]').innerHTML = state.cart.length ? state.cart.map(item => `<div class="cart-item"><div class="cart-thumb product-sprite-${item.sprite}"></div><div><strong>${escapeHtml(item.name)}</strong><small>${item.quantity} × ${money(item.price)}</small></div><button type="button" data-remove-cart="${escapeHtml(item.id)}" aria-label="Remove ${escapeHtml(item.name)}">×</button></div>`).join("") : `<p>Your cart is empty. Add selected bird care essentials from the shop.</p>`;
-  $('[data-cart-total]').textContent = money(state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0));
-  $$('[data-remove-cart]').forEach(button => button.addEventListener("click", () => { state.cart = state.cart.filter(item => item.id !== button.dataset.removeCart); saveCart(); }));
-}
-
-function openCart() {
-  $('[data-cart-drawer]').classList.add("open");
-  $('[data-cart-drawer]').setAttribute("aria-hidden", "false");
-  $('[data-drawer-overlay]').hidden = false;
-  document.body.classList.add("no-scroll");
-}
-
-function closeCart() {
-  $('[data-cart-drawer]').classList.remove("open");
-  $('[data-cart-drawer]').setAttribute("aria-hidden", "true");
-  $('[data-drawer-overlay]').hidden = true;
-  document.body.classList.remove("no-scroll");
+  const text = `Hello Exopets Colombo, I would like to check availability for ${product.name}${product.price ? ` (${money(product.price)})` : ""}. Can I visit the shop to see it?`;
+  window.open(`https://wa.me/${state.content.business.whatsapp}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
 }
 
 function openEnquiry(bird = "") {
   const modal = $('[data-modal="enquiry"]');
   const form = $('form', modal);
   form.dataset.requestType = "enquiry";
-  form.dataset.cartCheckout = "false";
   if (bird) $('select[name="bird"]', form).value = bird;
   modal.hidden = false;
   document.body.classList.add("no-scroll");
@@ -233,7 +183,6 @@ async function submitRequest(form) {
   const data = Object.fromEntries(new FormData(form));
   data.type = form.dataset.requestType || "enquiry";
   if (data.type === "matcher") data.answers = state.answers;
-  if (form.dataset.cartCheckout === "true") data.cart = state.cart.map(({ id, name, quantity, price }) => ({ id, name, quantity, price }));
   button.disabled = true;
   status.classList.remove("error");
   status.textContent = "Sending…";
@@ -243,7 +192,6 @@ async function submitRequest(form) {
     if (!response.ok) throw new Error(result.error || "Unable to send");
     status.textContent = `Received — reference ${result.reference}. We’ll contact you shortly.`;
     showToast("Your request has been sent to Exopets Colombo");
-    if (form.dataset.cartCheckout === "true") { state.cart = []; saveCart(); }
     form.reset();
   } catch (error) {
     status.classList.add("error");
@@ -261,12 +209,14 @@ function bindEvents() {
     if (enquiry) { event.preventDefault(); openEnquiry(); return; }
     const bird = event.target.closest('[data-enquire-bird]');
     if (bird) { event.preventDefault(); openEnquiry(bird.dataset.enquireBird); }
+    const product = event.target.closest('[data-enquire-product]');
+    if (product) { event.preventDefault(); enquireProduct(product.dataset.enquireProduct); }
   });
   window.addEventListener("popstate", () => navigate(currentRoute(), false));
   $('#menuToggle').addEventListener("click", () => { const open = $('#mobileNav').classList.toggle("open"); $('#menuToggle').setAttribute("aria-expanded", String(open)); });
   $$('[data-close-modal]').forEach(button => button.addEventListener("click", closeModal));
   $('[data-modal="enquiry"]').addEventListener("click", event => { if (event.target === event.currentTarget) closeModal(); });
-  document.addEventListener("keydown", event => { if (event.key === "Escape") { closeModal(); closeCart(); } });
+  document.addEventListener("keydown", event => { if (event.key === "Escape") closeModal(); });
   $('[data-match-back]').addEventListener("click", () => { if (state.matchStep > 0) { state.matchStep -= 1; renderMatcher(); } });
   $('[data-match-next]').addEventListener("click", () => { const question = state.content.matcher.questions[state.matchStep]; if (!state.answers[question.id]) return showToast("Choose an answer to continue"); if (state.matchStep < state.content.matcher.questions.length - 1) { state.matchStep += 1; renderMatcher(); } else showMatches(); });
   $('[data-match-reset]').addEventListener("click", () => { state.matchStep = 0; state.answers = {}; $('[data-recommendations]').hidden = true; renderMatcher(); window.scrollTo({ top: 260, behavior: "smooth" }); });
@@ -275,10 +225,6 @@ function bindEvents() {
   $$('[data-plus]').forEach(button => button.addEventListener("click", () => { const input = button.parentElement.querySelector("input"); input.value = Math.min(20, Number(input.value) + 1); }));
   $$('[data-minus]').forEach(button => button.addEventListener("click", () => { const input = button.parentElement.querySelector("input"); input.value = Math.max(1, Number(input.value) - 1); }));
   $('[data-product-search]').addEventListener("input", event => { state.search = event.target.value; renderShop(); });
-  $$('[data-cart-button]').forEach(button => button.addEventListener("click", openCart));
-  $('[data-cart-close]').addEventListener("click", closeCart);
-  $('[data-drawer-overlay]').addEventListener("click", closeCart);
-  $('[data-cart-checkout]').addEventListener("click", () => { if (!state.cart.length) return showToast("Your cart is empty"); closeCart(); openEnquiry(); const form = $('[data-modal="enquiry"] form'); form.dataset.requestType = "order"; form.dataset.cartCheckout = "true"; $('textarea[name="message"]', form).value = `Order request for ${state.cart.map(item => `${item.quantity} × ${item.name}`).join(", ")}.`; });
 }
 
 async function init() {
@@ -286,7 +232,6 @@ async function init() {
     const response = await fetch("/api/content", { cache: "no-store" });
     if (!response.ok) throw new Error("Content unavailable");
     state.content = await response.json();
-    await loadMarketplaceProducts();
   } catch (error) {
     document.body.innerHTML = `<main style="padding:10vw;color:white"><h1>EXOPETS COLOMBO</h1><p>We could not load the site content. Please refresh in a moment.</p></main>`;
     return;
@@ -297,7 +242,6 @@ async function init() {
   renderMatcher();
   renderGuides();
   renderShop();
-  renderCart();
   bindEvents();
   $('[data-year]').textContent = new Date().getFullYear();
   navigate(currentRoute(), false);
