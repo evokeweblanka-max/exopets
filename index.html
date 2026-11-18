@@ -22,10 +22,8 @@
       <a href="/dna-testing" data-route="dna">DNA testing</a>
       <a href="/care-guides" data-route="guides">Care guides</a>
       <a href="/enquire" data-open-enquiry>Enquire</a>
-      <a href="/seller" class="seller-nav-link">Sell with us</a>
     </nav>
     <div class="header-actions">
-      <button class="icon-button cart-button" type="button" data-cart-button aria-label="Open cart">🛒 <span data-cart-count>0</span></button>
       <a class="phone-pill" data-phone-link href="tel:+94768331143">☎ <span data-phone>076 833 1143</span></a>
       <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Open menu"><span></span><span></span><span></span></button>
     </div>
@@ -36,7 +34,6 @@
     <a href="/dna-testing" data-route="dna">DNA testing</a>
     <a href="/care-guides" data-route="guides">Care guides</a>
     <a href="/shop" data-route="shop">Bird care shop</a>
-    <a href="/seller">Seller sign in</a>
     <button type="button" data-open-enquiry>Enquire about a bird</button>
   </nav>
 
@@ -50,7 +47,7 @@
           <div class="hero-actions">
             <a class="button button-gold" href="/matcher" data-route="matcher"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c5-1 9-5 11-11 2 5 0 10-4 12M6 15l6 6M11 10c-3 1-5 3-6 6"/></svg> Find a live parrot <b>›</b></a>
             <a class="button button-blue" href="/dna-testing" data-route="dna"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3c0 6 8 12 8 18M16 3C16 9 8 15 8 21M9 6h6M8 11h8M8 16h8"/></svg> Book DNA testing <b>›</b></a>
-            <a class="button button-coral" href="/shop" data-route="shop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l2 10h9l2-7H7M10 19h.01M17 19h.01"/></svg> Shop bird care <b>›</b></a>
+            <a class="button button-coral" href="/shop" data-route="shop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l2 10h9l2-7H7M10 19h.01M17 19h.01"/></svg> Browse bird care <b>›</b></a>
           </div>
         </div>
         <div class="hero-glow" aria-hidden="true"></div>
@@ -155,7 +152,7 @@
       <div class="page-hero compact-hero shop-hero"><div><span class="eyebrow">SELECTED BIRD CARE</span><h1>Everyday essentials</h1><p>Thoughtfully selected food, enrichment and support products for your bird.</p></div></div>
       <div class="shop-toolbar section-pad"><div class="category-chips" data-category-chips></div><label class="search-box">⌕ <input data-product-search placeholder="Search bird care"></label></div>
       <div class="product-grid section-pad" data-product-grid></div>
-      <section class="seller-cta section-pad"><div><span class="eyebrow">FOR INDEPENDENT SELLERS</span><h2>Sell bird-care products through EXOPETS.</h2><p>Create a secure seller account, upload your catalogue and submit products for approval.</p></div><a class="button button-gold" href="/seller">Open seller centre <b>›</b></a></section>
+      <section class="visit-cta section-pad"><div><span class="eyebrow">CHECK STOCK &amp; VISIT</span><h2>Ask us what’s available today.</h2><p>Message EXOPETS on WhatsApp for current availability, then visit our Dehiwala shop for personal guidance.</p></div><a class="button button-gold" data-whatsapp-link href="#" target="_blank" rel="noopener">Enquire on WhatsApp <b>›</b></a></section>
     </section>
   </main>
 
@@ -163,7 +160,7 @@
     <div class="footer-brand"><img class="footer-logo" src="/assets/exopets-logo-official-v4.png" alt="EXOPETS COLOMBO"><div><p>Responsible guidance for extraordinary companions.</p></div></div>
     <div><span>VISIT</span><p data-address>218B Hill Street, Dehiwala</p><small data-hours>Call or WhatsApp before visiting</small></div>
     <div><span>CONTACT</span><a data-phone-link href="tel:+94768331143">Mobile · <span data-phone>076 833 1143</span></a><a data-landline-link href="tel:0112722418">Landline · <span data-landline>011 272 2418</span></a><a data-email-link href="mailto:hello@exopetscolombo.com" data-email>hello@exopetscolombo.com</a></div>
-    <div><span>EXPLORE</span><a href="/matcher" data-route="matcher">Find a live parrot</a><a href="/dna-testing" data-route="dna">DNA testing</a><a href="/care-guides" data-route="guides">Care guides</a><a href="/seller">Seller centre</a></div>
+    <div><span>EXPLORE</span><a href="/matcher" data-route="matcher">Find a live parrot</a><a href="/dna-testing" data-route="dna">DNA testing</a><a href="/care-guides" data-route="guides">Care guides</a><a href="/shop" data-route="shop">Bird care products</a></div>
     <p class="copyright">© <span data-year></span> EXOPETS COLOMBO. Bird availability and suitability are confirmed through direct enquiry.</p>
   </footer>
 
@@ -182,19 +179,8 @@
     </div>
   </div>
 
-  <aside class="cart-drawer" data-cart-drawer aria-hidden="true">
-    <div class="cart-head"><div><span class="eyebrow">YOUR SELECTION</span><h2>Bird care cart</h2></div><button type="button" data-cart-close aria-label="Close cart">×</button></div>
-    <div class="cart-items" data-cart-items></div>
-    <div class="cart-total"><span>Estimated total</span><strong data-cart-total>Rs. 0</strong></div>
-    <button class="button button-gold full" type="button" data-cart-checkout>Send order request</button>
-    <small>We’ll confirm stock, delivery and the final total before payment.</small>
-  </aside>
-  <div class="drawer-overlay" data-drawer-overlay hidden></div>
-
   <a class="whatsapp-float" data-whatsapp-link href="#" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">◉ <span>WhatsApp</span></a>
   <div class="toast" data-toast role="status" aria-live="polite"></div>
-  <script src="/vendor/supabase.js"></script>
-  <script src="/marketplace-config.js"></script>
   <script type="module" src="/app.js"></script>
 </body>
 </html>
