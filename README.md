@@ -1,31 +1,32 @@
 # EXOPETS Colombo
 
-Public website, owner content studio and moderated multi-seller marketplace for EXOPETS Colombo.
+Owner-operated live-parrot and bird-care catalogue for EXOPETS Colombo.
 
 ## Main routes
 
 - `/` — public website and live-parrot catalogue
-- `/shop` — house and approved seller products
-- `/seller` — seller registration, login, profile and product dashboard
-- `/admin` — owner content studio, seller approvals and product moderation
+- `/shop` — owner-managed bird-care products with WhatsApp enquiries
+- `/care-guides` — practical species care information
+- `/dna-testing` — DNA-test request form
+- `/admin` — private owner content studio
+
+## Owner workflow
+
+The owner signs in at `/admin` to manage business details, birds, availability, products, prices, images, care guides, bird-matcher questions and customer enquiries. Uploaded images are converted in the browser to a consistent 1400 × 1050 WebP frame before secure storage.
 
 ## Architecture
 
-- Vercel hosts the static website and serverless admin endpoints.
-- Supabase provides seller authentication, row-level secured data and product image storage.
-- Vercel Blob retains the existing owner-managed website content and customer requests.
-- Seller images are normalized in the browser to a 1200 × 900 WebP canvas with contained positioning before upload.
+- Vercel hosts the static website and serverless API routes.
+- Vercel Blob stores website content, enquiries and owner-uploaded images.
+- Admin sessions use a signed, HTTP-only, secure cookie.
+- Public visitors cannot edit content and do not have accounts.
 
-## Security model
+## Required environment variables
 
-- Every seller can access only their own private profile, drafts and uploads.
-- Public visitors can read only active products belonging to approved sellers.
-- Seller and product approvals require a verified Supabase user whose server-controlled profile role is `admin`.
-- All public-schema marketplace tables use Row Level Security.
-
-## Database
-
-The reproducible Supabase SQL lives in `supabase/migrations/`. Apply migrations in numeric order.
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `SESSION_SECRET`
+- `BLOB_READ_WRITE_TOKEN`
 
 ## Local checks
 

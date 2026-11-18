@@ -4,20 +4,14 @@ import { readJson, writeJson } from "./_store.js";
 
 const PATH = "exopets/content.json";
 
-function mergeMissingById(saved = [], defaults = []) {
-  const items = Array.isArray(saved) ? saved : [];
-  const ids = new Set(items.map(item => item?.id));
-  return [...items, ...defaults.filter(item => !ids.has(item.id))];
-}
-
 function hydrateContent(saved = {}) {
   return {
     ...defaultContent,
     ...saved,
     business: { ...defaultContent.business, ...(saved.business || {}) },
-    birds: mergeMissingById(saved.birds, defaultContent.birds),
-    products: mergeMissingById(saved.products, defaultContent.products),
-    guides: mergeMissingById(saved.guides, defaultContent.guides),
+    birds: Array.isArray(saved.birds) ? saved.birds : defaultContent.birds,
+    products: Array.isArray(saved.products) ? saved.products : defaultContent.products,
+    guides: Array.isArray(saved.guides) ? saved.guides : defaultContent.guides,
     matcher: {
       ...defaultContent.matcher,
       ...(saved.matcher || {}),
@@ -46,7 +40,7 @@ export default async function handler(req, res) {
   if (!isAdmin(req)) return json(res, 401, { error: "Not authorised" });
   try {
     const content = await readBody(req);
-    if (!content?.business?.name || !Array.isArray(content.birds) || !Array.isArray(content.products) || !Array.isArray(content.guides)) {
+    if (!content?.business?.name || !Array.isArray(content.birds) || !Array.isArray(content.products) || !Array.isArray(content.guides) || content.birds.length > 100 || content.products.length > 500 || content.guides.length > 100) {
       return json(res, 422, { error: "Content is incomplete" });
     }
     await writeJson(PATH, { ...content, updatedAt: new Date().toISOString() });

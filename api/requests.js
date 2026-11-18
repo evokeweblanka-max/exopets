@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     if (body.website) return json(res, 200, { ok: true });
     const name = clean(body.name, 100);
     const phone = clean(body.phone, 40);
-    const type = ["enquiry", "dna", "order", "matcher"].includes(body.type) ? body.type : "enquiry";
+    const type = ["enquiry", "dna", "matcher"].includes(body.type) ? body.type : "enquiry";
     if (!name || !phone) return json(res, 422, { error: "Name and contact number are required" });
     const item = {
       id: randomUUID(),
@@ -63,7 +63,6 @@ export default async function handler(req, res) {
       quantity: Math.max(1, Math.min(20, Number(body.quantity) || 1)),
       preference: clean(body.preference, 80),
       message: clean(body.message, 1000),
-      cart: Array.isArray(body.cart) ? body.cart.slice(0, 30).map(x => ({ id: clean(x.id, 100), name: clean(x.name, 150), quantity: Math.max(1, Math.min(20, Number(x.quantity) || 1)), price: Number(x.price) || 0 })) : [],
       answers: body.answers && typeof body.answers === "object" ? body.answers : {},
       status: "new",
       createdAt: new Date().toISOString()

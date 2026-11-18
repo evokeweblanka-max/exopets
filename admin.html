@@ -38,11 +38,9 @@
         <button data-tab="business"><span>✦</span> Site details</button>
         <button data-tab="birds"><span>🦜</span> Birds</button>
         <button data-tab="products"><span>▣</span> Products</button>
-        <button data-tab="sellers"><span>♙</span> Sellers <b data-seller-count>0</b></button>
-        <button data-tab="marketplace"><span>▦</span> Seller products <b data-product-review-count>0</b></button>
         <button data-tab="guides"><span>▤</span> Care guides</button>
         <button data-tab="matcher"><span>⌕</span> Bird matcher</button>
-        <button data-tab="requests"><span>✉</span> Requests <b data-new-count>0</b></button>
+        <button data-tab="requests"><span>✉</span> Enquiries <b data-new-count>0</b></button>
       </nav>
       <div class="sidebar-bottom"><a href="/" target="_blank">↗ Open website</a><button type="button" data-logout>Sign out</button></div>
     </aside>
@@ -53,8 +51,6 @@
         <section class="admin-panel" data-panel="business"></section>
         <section class="admin-panel" data-panel="birds"></section>
         <section class="admin-panel" data-panel="products"></section>
-        <section class="admin-panel" data-panel="sellers"></section>
-        <section class="admin-panel" data-panel="marketplace"></section>
         <section class="admin-panel" data-panel="guides"></section>
         <section class="admin-panel" data-panel="matcher"></section>
         <section class="admin-panel" data-panel="requests"></section>
@@ -62,8 +58,6 @@
     </section>
   </div>
   <div class="toast" data-toast role="status"></div>
-  <script src="/vendor/supabase.js"></script>
-  <script src="/marketplace-config.js"></script>
   <script type="module" src="/admin.js"></script>
 </body>
 </html>
