@@ -33,6 +33,12 @@ function imageStyle(item, type = "bird") {
   return ` style="background-image:url('${escapeHtml(versionedImageUrl(item.image))}');background-size:${fit};background-position:center;background-repeat:no-repeat"`;
 }
 
+function productImageClass(product, baseClass = "product-image") {
+  if (product.image) return baseClass;
+  if (product.sprite == null) return `${baseClass} product-image-required`;
+  return `${baseClass} product-sprite-${Number(product.sprite) || 0}`;
+}
+
 function birdImage(item, extra = "") {
   const sprite = Number(item.sprite) || 0;
   return `<div class="species-image sprite-${sprite} ${extra}"${imageStyle(item)}></div>`;
@@ -139,7 +145,7 @@ function renderGuides(selectedId) {
   const tabLabel = guide => guide.title.replace(/\s+Care Guide$/i, "").replace(/^New Bird Home Checklist$/i, "New bird checklist");
   $('[data-guide-list]').innerHTML = guides.map(guide => `<button type="button" class="${guide.id === selected.id ? "active" : ""}" data-guide-id="${escapeHtml(guide.id)}" aria-pressed="${guide.id === selected.id}"><strong>${escapeHtml(tabLabel(guide))}</strong><small>${escapeHtml(guide.intro)}</small></button>`).join("");
   const bird = state.content.birds.find(item => item.id === selected.birdId) || state.content.birds[0];
-  const related = state.content.products.filter(product => product.active !== false && product.relatedBirds?.includes(bird.id)).slice(0, 3);
+  const related = state.content.products.filter(product => product.active !== false && (product.image || product.sprite != null) && product.relatedBirds?.includes(bird.id)).slice(0, 3);
   const facts = [
     ["bird", "Size", bird.size],
     ["weight", "Weight", bird.weight],
@@ -148,17 +154,17 @@ function renderGuides(selectedId) {
   ];
   const factPanel = selected.birdId === "all" ? "" : `<section class="quick-facts"><h3>Quick facts</h3><div class="fact-grid">${facts.map(([icon, label, value]) => `<div class="fact-item">${careIcon(icon)}<div><span>${label}</span><strong>${escapeHtml(value || "Ask our team")}</strong></div></div>`).join("")}</div></section>
     <div class="care-rows"><article>${careIcon("bowl")}<div><h3>Food</h3><p>${escapeHtml(bird.food)}</p></div><span>›</span></article><article>${careIcon("toy")}<div><h3>Enrichment</h3><p>${escapeHtml(bird.enrichment)}</p></div><span>›</span></article></div>`;
-  const relatedPanel = related.length ? `<section class="related-essentials"><h3>Related essentials</h3><div class="related-product-grid">${related.map(product => `<article><div class="related-product-image product-sprite-${Number(product.sprite) || 0}"${imageStyle(product, "product")}></div><small>${escapeHtml(product.category)}</small><h4>${escapeHtml(product.name)}</h4><strong>${money(product.price)}</strong><button type="button" data-enquire-product="${escapeHtml(product.id)}">Enquire</button></article>`).join("")}</div></section>` : "";
+  const relatedPanel = related.length ? `<section class="related-essentials"><h3>Related essentials</h3><div class="related-product-grid">${related.map(product => `<article><div class="${productImageClass(product, "related-product-image")}"${imageStyle(product, "product")}></div><small>${escapeHtml(product.category)}</small><h4>${escapeHtml(product.name)}</h4><strong>${money(product.price)}</strong><button type="button" data-enquire-product="${escapeHtml(product.id)}">Enquire</button></article>`).join("")}</div></section>` : "";
   $('[data-guide-detail]').innerHTML = `<div class="guide-cover"><div class="guide-cover-copy"><span class="eyebrow">CARE GUIDE</span><h2>${escapeHtml(selected.title)}</h2><p>${escapeHtml(selected.intro)}</p></div>${birdImage(bird, "guide-cover-bird")}</div><div class="guide-paper">${factPanel}${relatedPanel}<details class="guide-more"><summary>Complete care guidance</summary>${selected.sections.map(section => `<section class="guide-detail-section"><h3>${escapeHtml(section.title)}</h3><p>${escapeHtml(section.body)}</p></section>`).join("")}<p class="care-disclaimer">General guidance only. Diet changes, supplements and health concerns should be discussed with an avian veterinarian.</p></details><button type="button" class="button button-coral" data-enquire-bird="${escapeHtml(bird.name)}">Ask our team a question</button></div>`;
   $$('[data-guide-id]').forEach(button => button.addEventListener("click", () => renderGuides(button.dataset.guideId)));
 }
 
 function renderShop() {
-  const products = state.content.products.filter(product => product.active !== false);
+  const products = state.content.products.filter(product => product.active !== false && (product.image || product.sprite != null));
   const categories = ["All", ...new Set(products.map(product => product.category))];
   $('[data-category-chips]').innerHTML = categories.map(category => `<button type="button" class="${state.category === category ? "active" : ""}" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join("");
   const visible = products.filter(product => (state.category === "All" || product.category === state.category) && `${product.name} ${product.description} ${product.category}`.toLowerCase().includes(state.search.toLowerCase()));
-  $('[data-product-grid]').innerHTML = visible.length ? visible.map(product => `<article class="product-card"><div class="product-image product-sprite-${Number(product.sprite) || 0}"${imageStyle(product, "product")}></div><div class="product-card-content"><span class="category">${escapeHtml(product.category).toUpperCase()}</span><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.description)}</p><footer><span class="price">${money(product.price)}</span><button type="button" data-enquire-product="${escapeHtml(product.id)}">WhatsApp enquiry</button></footer></div></article>`).join("") : `<p>No products match your search.</p>`;
+  $('[data-product-grid]').innerHTML = visible.length ? visible.map(product => `<article class="product-card"><div class="${productImageClass(product)}"${imageStyle(product, "product")}></div><div class="product-card-content"><span class="category">${escapeHtml(product.category).toUpperCase()}</span><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.description)}</p><footer><span class="price">${money(product.price)}</span><button type="button" data-enquire-product="${escapeHtml(product.id)}">WhatsApp enquiry</button></footer></div></article>`).join("") : `<p>No products match your search.</p>`;
   $$('[data-category]').forEach(button => button.addEventListener("click", () => { state.category = button.dataset.category; renderShop(); }));
 }
 
