@@ -33,7 +33,11 @@ export default async function handler(req, res) {
     const supplement = content.products?.find(item => item.id === "feather-support");
     if (supplement?.name === "Feather Support Supplement") supplement.name = "Avian Mineral Support";
     if (supplement?.description === "Daily nutritional support for healthy plumage.") supplement.description = "Use only when advised for your bird’s individual diet.";
-    res.setHeader("Cache-Control", "public, s-maxage=30, stale-while-revalidate=300");
+    // Owner edits must be visible immediately. Caching this JSON at the edge meant
+    // a newly saved product could keep its previous image for several minutes.
+    res.setHeader("Cache-Control", "no-store, no-cache, max-age=0, must-revalidate");
+    res.setHeader("CDN-Cache-Control", "no-store");
+    res.setHeader("Vercel-CDN-Cache-Control", "no-store");
     return json(res, 200, content);
   }
   if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
@@ -43,8 +47,10 @@ export default async function handler(req, res) {
     if (!content?.business?.name || !Array.isArray(content.birds) || !Array.isArray(content.products) || !Array.isArray(content.guides) || content.birds.length > 100 || content.products.length > 500 || content.guides.length > 100) {
       return json(res, 422, { error: "Content is incomplete" });
     }
-    await writeJson(PATH, { ...content, updatedAt: new Date().toISOString() });
-    return json(res, 200, { ok: true, savedAt: new Date().toISOString() });
+    const savedAt = new Date().toISOString();
+    await writeJson(PATH, { ...content, updatedAt: savedAt });
+    res.setHeader("Cache-Control", "no-store");
+    return json(res, 200, { ok: true, savedAt });
   } catch (error) {
     console.error(error);
     return json(res, 500, { error: "Could not save content" });
