@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const COOKIE = "exopets_admin";
+const SESSION_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 function safeEqual(a, b) {
   const aa = Buffer.from(String(a));
@@ -20,13 +21,23 @@ export function validCredentials(email, password) {
     safeEqual(password, process.env.ADMIN_PASSWORD || "disabled");
 }
 
-export function createSessionCookie() {
-  const payload = Buffer.from(JSON.stringify({ exp: Date.now() + 1000 * 60 * 60 * 12 })).toString("base64url");
-  return `${COOKIE}=${payload}.${sign(payload)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=43200`;
+function cookieDomain(req) {
+  const host = String(req?.headers?.["x-forwarded-host"] || req?.headers?.host || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase()
+    .split(":")[0];
+  return host === "exopets.lk" || host === "www.exopets.lk" ? "; Domain=.exopets.lk" : "";
 }
 
-export function clearSessionCookie() {
-  return `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
+export function createSessionCookie(req) {
+  const expiresAt = Date.now() + SESSION_AGE_SECONDS * 1000;
+  const payload = Buffer.from(JSON.stringify({ exp: expiresAt })).toString("base64url");
+  return `${COOKIE}=${payload}.${sign(payload)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_AGE_SECONDS}; Expires=${new Date(expiresAt).toUTCString()}${cookieDomain(req)}`;
+}
+
+export function clearSessionCookie(req) {
+  return `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT${cookieDomain(req)}`;
 }
 
 export function isAdmin(req) {
