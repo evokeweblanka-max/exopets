@@ -180,21 +180,50 @@ function removeImageFromItem(type, index) {
   type === "bird" ? renderBirds() : renderProducts();
 }
 
+function imageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => resolve({ image, width: image.naturalWidth, height: image.naturalHeight, close: () => URL.revokeObjectURL(url) });
+    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error("This image format could not be opened. Use JPG, PNG or WebP.")); };
+    image.src = url;
+  });
+}
+
+async function decodeImage(file) {
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(file);
+      return { image: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close?.() };
+    } catch { /* Fall back for browsers that cannot decode through createImageBitmap. */ }
+  }
+  return imageFromFile(file);
+}
+
+function canvasBlob(canvas, quality) {
+  return new Promise(resolve => canvas.toBlob(resolve, "image/webp", quality));
+}
+
 async function normalizeImage(file, fit) {
-  if (!file.type.startsWith("image/")) throw new Error("Choose a JPG, PNG or WebP image");
-  if (file.size > 12 * 1024 * 1024) throw new Error("Image must be smaller than 12 MB");
-  const bitmap = await createImageBitmap(file);
+  const supportedType = ["image/jpeg", "image/png", "image/webp"].includes(file.type);
+  const supportedName = /\.(jpe?g|png|webp)$/i.test(file.name);
+  if (!supportedType && !supportedName) throw new Error("Choose a JPG, PNG or WebP image");
+  if (file.size > 15 * 1024 * 1024) throw new Error("Image must be smaller than 15 MB");
+  const decoded = await decodeImage(file);
   const width = 1400, height = 1050;
   const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
   const ctx = canvas.getContext("2d");
+  if (!ctx) { decoded.close(); throw new Error("This browser could not prepare the image"); }
   ctx.fillStyle = fit === "contain" ? "#f7f0e3" : "#063325"; ctx.fillRect(0, 0, width, height);
-  const scale = fit === "contain" ? Math.min(width / bitmap.width, height / bitmap.height) : Math.max(width / bitmap.width, height / bitmap.height);
-  const drawWidth = bitmap.width * scale, drawHeight = bitmap.height * scale;
-  ctx.drawImage(bitmap, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
-  bitmap.close?.();
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", .86));
-  if (!blob) throw new Error("Could not prepare this image");
-  return blob;
+  const scale = fit === "contain" ? Math.min(width / decoded.width, height / decoded.height) : Math.max(width / decoded.width, height / decoded.height);
+  const drawWidth = decoded.width * scale, drawHeight = decoded.height * scale;
+  ctx.drawImage(decoded.image, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+  decoded.close();
+  for (const quality of [.86, .74, .62]) {
+    const blob = await canvasBlob(canvas, quality);
+    if (blob && blob.size <= 2_350_000) return blob;
+  }
+  throw new Error("The prepared image is still too large. Try a smaller photo.");
 }
 
 async function uploadImage(input) {
@@ -205,28 +234,36 @@ async function uploadImage(input) {
   try {
     const blob = await normalizeImage(input.files[0], input.dataset.fit);
     const filename = idFrom(input.files[0].name.replace(/\.[^.]+$/, ""));
-    const response = await fetch(`/api/upload?kind=${encodeURIComponent(type)}&name=${encodeURIComponent(filename)}`, { method: "POST", headers: { "Content-Type": "image/webp" }, body: blob });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Upload failed");
+    const response = await fetch(`/api/upload?kind=${encodeURIComponent(type)}&name=${encodeURIComponent(filename)}`, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "image/webp" }, body: blob });
+    const responseText = await response.text();
+    let result = {}; try { result = JSON.parse(responseText); } catch { /* Use the status-specific message below. */ }
+    if (response.status === 401) throw new Error("Your admin session expired. Sign in again and retry.");
+    if (!response.ok) throw new Error(result.error || `Upload failed (${response.status})`);
     const collection = type === "bird" ? admin.content.birds : admin.content.products;
     collection[index].image = result.url;
     markDirty();
     type === "bird" ? renderBirds() : renderProducts();
-    toast("Image uploaded — save the website to publish it");
+    const published = await persistContent("Image uploaded and published");
+    if (!published) toast("Image uploaded, but publishing failed — click Save website to retry");
   } catch (error) { status.textContent = error.message; toast(error.message); }
   finally { admin.uploading = false; input.disabled = false; input.value = ""; }
 }
 
-async function saveContent() {
-  if (admin.uploading) return toast("Wait for the image upload to finish");
+async function persistContent(successMessage = "Website saved and published") {
   const button = $('[data-save]'); button.disabled = true; $('[data-save-state]').textContent = "Saving…";
   try {
-    const response = await fetch("/api/content", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(admin.content) });
+    const response = await fetch("/api/content", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(admin.content) });
     const result = await response.json();
+    if (response.status === 401) throw new Error("Your admin session expired. Sign in again.");
     if (!response.ok) throw new Error(result.error || "Save failed");
-    admin.content.updatedAt = result.savedAt; markSaved(); renderOverview(); toast("Website saved and published");
-  } catch (error) { $('[data-save-state]').textContent = error.message; $('[data-save-state]').classList.add("unsaved"); toast(error.message); }
+    admin.content.updatedAt = result.savedAt; markSaved(); renderOverview(); toast(successMessage); return true;
+  } catch (error) { $('[data-save-state]').textContent = error.message; $('[data-save-state]').classList.add("unsaved"); toast(error.message); return false; }
   finally { button.disabled = false; }
+}
+
+async function saveContent() {
+  if (admin.uploading) return toast("Wait for the image upload to finish");
+  await persistContent();
 }
 
 async function loadRequests(showMessage = true) {
