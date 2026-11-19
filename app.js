@@ -20,10 +20,17 @@ function showToast(message) {
   showToast.timer = setTimeout(() => toast.classList.remove("show"), 3200);
 }
 
+function versionedImageUrl(url) {
+  if (!url) return "";
+  const revision = state.content?.updatedAt;
+  if (!revision) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}siteRevision=${encodeURIComponent(revision)}`;
+}
+
 function imageStyle(item, type = "bird") {
   if (!item.image) return "";
   const fit = type === "product" ? "contain" : "cover";
-  return ` style="background-image:url('${escapeHtml(item.image)}');background-size:${fit};background-position:center;background-repeat:no-repeat"`;
+  return ` style="background-image:url('${escapeHtml(versionedImageUrl(item.image))}');background-size:${fit};background-position:center;background-repeat:no-repeat"`;
 }
 
 function birdImage(item, extra = "") {
@@ -229,7 +236,7 @@ function bindEvents() {
 
 async function init() {
   try {
-    const response = await fetch("/api/content", { cache: "no-store" });
+    const response = await fetch(`/api/content?revision=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) throw new Error("Content unavailable");
     state.content = await response.json();
   } catch (error) {
