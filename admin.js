@@ -276,7 +276,7 @@ async function login(event) {
 async function logout() { await fetch("/api/logout", { method: "POST" }); location.reload(); }
 
 async function bootAdmin() {
-  const [contentResponse, requestsResponse] = await Promise.all([fetch("/api/content", { cache: "no-store" }), fetch("/api/requests", { cache: "no-store" })]);
+  const [contentResponse, requestsResponse] = await Promise.all([fetch(`/api/content?revision=${Date.now()}`, { cache: "no-store" }), fetch("/api/requests", { cache: "no-store" })]);
   if (requestsResponse.status === 401) return showLogin();
   if (!contentResponse.ok || !requestsResponse.ok) throw new Error("Could not load the dashboard");
   admin.content = await contentResponse.json(); admin.content.business.landline ||= "011 272 2418"; admin.requests = await requestsResponse.json();
