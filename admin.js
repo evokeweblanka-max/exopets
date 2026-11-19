@@ -266,17 +266,17 @@ async function login(event) {
   button.disabled = true; status.classList.remove("error"); status.textContent = "Signing in…";
   try {
     const credentials = Object.fromEntries(new FormData(form));
-    const response = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(credentials) });
+    const response = await fetch("/api/login", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(credentials) });
     const result = await response.json(); if (!response.ok) throw new Error(result.error || "Sign in failed");
     form.reset(); await bootAdmin();
   } catch (error) { status.classList.add("error"); status.textContent = error.message; }
   finally { button.disabled = false; }
 }
 
-async function logout() { await fetch("/api/logout", { method: "POST" }); location.reload(); }
+async function logout() { await fetch("/api/logout", { method: "POST", credentials: "same-origin" }); location.reload(); }
 
 async function bootAdmin() {
-  const [contentResponse, requestsResponse] = await Promise.all([fetch(`/api/content?revision=${Date.now()}`, { cache: "no-store" }), fetch("/api/requests", { cache: "no-store" })]);
+  const [contentResponse, requestsResponse] = await Promise.all([fetch(`/api/content?revision=${Date.now()}`, { cache: "no-store", credentials: "same-origin" }), fetch("/api/requests", { cache: "no-store", credentials: "same-origin" })]);
   if (requestsResponse.status === 401) return showLogin();
   if (!contentResponse.ok || !requestsResponse.ok) throw new Error("Could not load the dashboard");
   admin.content = await contentResponse.json(); admin.content.business.landline ||= "011 272 2418"; admin.requests = await requestsResponse.json();
@@ -285,7 +285,7 @@ async function bootAdmin() {
 
 async function init() {
   $('[data-login-form]').addEventListener("submit", login); bindAdminEvents();
-  try { const response = await fetch("/api/session", { cache: "no-store" }); if (response.ok) await bootAdmin(); else showLogin(); }
+  try { const response = await fetch(`/api/session?revision=${Date.now()}`, { cache: "no-store", credentials: "same-origin" }); if (response.ok) await bootAdmin(); else showLogin(); }
   catch { showLogin(); }
 }
 
