@@ -56,7 +56,7 @@ function imageUploader(type, index, image, fit = "cover") {
     <span>${type === "bird" ? "Bird image" : "Product image"}</span>
     <div class="upload-row">
       <label class="upload-button">Upload image<input type="file" accept="image/jpeg,image/png,image/webp" data-image-upload="${type}" data-index="${index}" data-fit="${fit}"></label>
-      ${image ? `<button class="small-button" type="button" data-remove-image="${type}" data-index="${index}">Use built-in image</button>` : ""}
+      ${image ? `<button class="small-button" type="button" data-remove-image="${type}" data-index="${index}">${type === "bird" ? "Use built-in image" : "Remove image"}</button>` : ""}
       <small data-upload-status="${type}-${index}">JPG, PNG or WebP. Automatically fitted to a standard 4:3 frame.</small>
     </div>
   </div>`;
@@ -92,8 +92,8 @@ function renderBirds() {
 
 function renderProducts() {
   $('[data-panel="products"]').innerHTML = `<div class="panel-heading"><div><h2>Products</h2><p>Manage the owner’s public catalogue. Customers enquire through WhatsApp.</p></div><button class="button button-gold" type="button" data-add="product">＋ Add product</button></div><div class="repeat-list">${admin.content.products.map((product, i) => `<article class="repeat-card">
-    <div class="repeat-head"><div class="image-preview product-preview product-sprite-${Number(product.sprite) || 0}" ${product.image ? `style="background-image:url('${esc(product.image)}')"` : ""}></div><div><h3>${esc(product.name || "New product")}</h3><small>${money(product.price)} · ${esc(product.category)}</small></div><span class="flex-spacer"></span>${switchField("Visible", `products.${i}.active`)}<button class="danger-button" type="button" data-delete="product" data-index="${i}">Delete</button></div>
-    <div class="repeat-body"><div class="repeat-grid">${field("Name", `products.${i}.name`)}${field("Slug / ID", `products.${i}.id`)}${field("Category", `products.${i}.category`)}${field("Price (Rs.)", `products.${i}.price`, { type: "number", min: 0 })}${field("Built-in image", `products.${i}.sprite`, { type: "number", min: 0, note: "Used only when no custom image is uploaded" })}${field("Related bird IDs", `products.${i}.relatedBirds`, { transform: "csv" })}${imageUploader("product", i, product.image, "contain")}${field("Image URL", `products.${i}.image`, { full: true, note: "Filled automatically after upload. A direct image URL can also be pasted." })}${field("Description", `products.${i}.description`, { type: "textarea", full: true })}</div></div>
+    <div class="repeat-head"><div class="image-preview product-preview ${product.image ? "" : product.sprite == null ? "image-required-preview" : `product-sprite-${Number(product.sprite) || 0}`}" ${product.image ? `style="background-image:url('${esc(product.image)}')"` : ""}>${!product.image && product.sprite == null ? "<span>Image required</span>" : ""}</div><div><h3>${esc(product.name || "New product")}</h3><small>${money(product.price)} · ${esc(product.category)}</small></div><span class="flex-spacer"></span>${switchField("Visible", `products.${i}.active`)}<button class="danger-button" type="button" data-delete="product" data-index="${i}">Delete</button></div>
+    <div class="repeat-body"><div class="repeat-grid">${field("Name", `products.${i}.name`)}${field("Slug / ID", `products.${i}.id`)}${field("Category", `products.${i}.category`)}${field("Price (Rs.)", `products.${i}.price`, { type: "number", min: 0 })}${field("Related bird IDs", `products.${i}.relatedBirds`, { transform: "csv" })}${imageUploader("product", i, product.image, "contain")}${field("Image URL", `products.${i}.image`, { full: true, note: "Required for every new product. Filled automatically after upload." })}${field("Description", `products.${i}.description`, { type: "textarea", full: true })}</div></div>
   </article>`).join("")}</div>`;
 }
 
@@ -159,7 +159,7 @@ function bindAdminEvents() {
 
 function addItem(type) {
   if (type === "bird") admin.content.birds.push({ id: idFrom(`bird-${Date.now()}`), name: "New bird", short: "", saleType: "Enquire for current availability", dnaStatus: "DNA testing available", experience: ["some"], time: "medium", noise: "medium", home: ["house"], sprite: 0, featured: true, available: true, size: "", weight: "", temperament: "", lifespan: "", food: "", enrichment: "", image: "" });
-  if (type === "product") admin.content.products.push({ id: idFrom(`product-${Date.now()}`), name: "New product", category: "Bird care", price: 0, description: "", sprite: 0, active: true, relatedBirds: [], image: "" });
+  if (type === "product") admin.content.products.push({ id: idFrom(`product-${Date.now()}`), name: "New product", category: "Bird care", price: 0, description: "", sprite: null, active: false, relatedBirds: [], image: "" });
   if (type === "guide") admin.content.guides.push({ id: idFrom(`guide-${Date.now()}`), birdId: "all", title: "New care guide", intro: "", sections: [{ title: "Overview", body: "" }] });
   markDirty();
   if (type === "bird") renderBirds(); else if (type === "product") renderProducts(); else renderGuides();
@@ -250,6 +250,12 @@ async function uploadImage(input) {
 }
 
 async function persistContent(successMessage = "Website saved and published") {
+  const missingImage = admin.content.products.find(product => product.active && product.sprite == null && !String(product.image || "").trim());
+  if (missingImage) {
+    showTab("products");
+    toast(`Upload an image for ${missingImage.name || "the new product"} before making it visible`);
+    return false;
+  }
   const button = $('[data-save]'); button.disabled = true; $('[data-save-state]').textContent = "Saving…";
   try {
     const response = await fetch("/api/content", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(admin.content) });
